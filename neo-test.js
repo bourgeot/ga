@@ -1,5 +1,34 @@
 var neo4J = (function() {
+	//local private variables.
+	//service root
 	var aService;
+	//transaction 
+	function rQuery (statements, callback, autoCommit) {
+		var response = {},
+			endpoint = aService.transaction,
+			xhr = new XMLHttpRequest();
+		if (!autoCommit) {
+			endpoint = aService.commit;
+		}
+		xhr.open('POST', endpoint, true);	
+		xhr.setRequestHeader("Access-Control-Allow-Origin", '*');
+		xhr.setRequestHeader("Accept", "application/json; charset=UTF-8");
+		xhr.setRequestHeader("X-Stream", "true");
+		xhr.send(JSON.stringify(statements)); //send the serialized object
+		xhr.onreadystatechange=function() {
+			if (xhr.readyState==4) {
+				switch(xhr.status) {
+					case 200:
+					//document.getElementById("response").innerHTML=xhr.responseText;
+						response = JSON.parse(xhr.responseText);
+					break;
+				}
+				//console.log(aService);
+				//load(service);
+			}
+		}
+		callback(response);
+	}
 	function pService() {
 		//var aService;
 		if (aService == null) {
@@ -28,5 +57,7 @@ var neo4J = (function() {
 		}
 	}
 	pService();
+	
+	
 	return {service : function() { return pService();}}
 })(); 

@@ -35,7 +35,9 @@ function setup() {
 	}
 }
 //run a query and return a result.
-
+function logIt(data) {
+	console.log(data);
+}
 function load(service) {
 	//assume data is a list of objects. add them if they haven't already been added based on 'key' value
 	//NOT YET--> let each property be a node with name and key attrs same as value, and add a relationship 'has' for it.

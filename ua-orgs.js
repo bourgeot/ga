@@ -1,5 +1,8 @@
 function uaOrgs(data) {
-	var i, k, root = {}, rootId = 'UNAZ', prop, bFound = false;
+	var i, k, root = {}, rootId = 'UNAZ', prop, bFound = false,
+		//payload =[],
+		wrapper = {statements:[]},
+		query = {statement: "CREATE (n:UaOrg {orgs}) Return n", parameters: {orgs: []}};
 	//name, id, children, parent.
 	//for d3 the tree root has no parent.
 	for(i=data.length - 1; i >= 0; i--) {
@@ -27,6 +30,57 @@ function uaOrgs(data) {
 			}
 		}
 	}
-	console.log(data);
-	console.log(root);
+
+	//cQ.parameters = {nodes: data};
+	//query.statements.push(cQ);
+	//query.params = {nodes: []};
+
+	for(i = 0; i<data.length; i++) {
+		if (i<2) {
+			console.log(data[i]);
+		}
+		//construct query
+		/*
+			{ChildUaOrg:<org>, ParentUaOrg:<org>, UaOrg: <org>}
+			CY_RCU_DESCR
+			CY_RCU_GROUP
+			finOnly
+			fin_code
+			fin_name
+			fin_parent_code
+			fin_parent_name
+			hrAndFin
+			hrOnly
+			hr_code
+			hr_name
+			hr_parent_code
+			hr_parent_name
+			id <-- use this as the unique identifier
+			name
+			parent_id
+			parent_name	
+		*/
+		query.parameters.orgs.push(
+			{
+				name: data[i].UaOrg.name,
+				orgId: data[i].UaOrg.id,
+				parentOrgId: data[i].UaOrg.parent_id,
+				financial: data[i].UaOrg.finOnly,
+				hr: data[i].UaOrg.hrOnly,
+				hrAndFin: data[i].UaOrg.hrAndFin,
+				cyRcuDesr: (data[i].UaOrg.CY_RCU_DESCR === null) ? "0": data[i].UaOrg.CY_RCU_DESCR,
+				cyRcuGroup: (data[i].UaOrg.CY_RCU_GROUP === null) ? "0": data[i].UaOrg.CY_RCU_GROUP
+			}
+		);	
+	
+
+	}
+	wrapper.statements.push(query);
+	console.log( wrapper);
+
+	//call the neo service
+	neo4J.query(wrapper, loaded, true);
+}
+function loaded(response) {
+	console.log(response);
 }

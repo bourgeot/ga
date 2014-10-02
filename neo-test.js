@@ -3,31 +3,60 @@ var neo4J = (function() {
 	//service root
 	var aService;
 	//transaction 
-	function rQuery (statements, callback, autoCommit) {
-		var response = {},
+	function rQuery (statements, callback, sendCommit) {
+		var response = {result: {}, commited: "open"},
 			endpoint = aService.transaction,
 			xhr = new XMLHttpRequest();
-		if (!autoCommit) {
-			endpoint = aService.commit;
-		}
+		//if (!sendCommit) {
+		//	endpoint = aService.commit;
+		//}
 		xhr.open('POST', endpoint, true);	
 		xhr.setRequestHeader("Access-Control-Allow-Origin", '*');
 		xhr.setRequestHeader("Accept", "application/json; charset=UTF-8");
-		xhr.setRequestHeader("X-Stream", "true");
+		//xhr.setRequestHeader("X-Stream", "true");
+		xhr.setRequestHeader("Content-Type", "application/json");
 		xhr.send(JSON.stringify(statements)); //send the serialized object
 		xhr.onreadystatechange=function() {
 			if (xhr.readyState==4) {
 				switch(xhr.status) {
 					case 200:
+					case 201:
 					//document.getElementById("response").innerHTML=xhr.responseText;
-						response = JSON.parse(xhr.responseText);
-					break;
+						response.result = JSON.parse(xhr.responseText);
+						if (sendCommit) {
+							xhr.open('POST', response.result.commit, true);
+							xhr.setRequestHeader("Access-Control-Allow-Origin", '*');
+							xhr.setRequestHeader("Accept", "application/json; charset=UTF-8");
+							xhr.setRequestHeader("Content-Type", "application/json");
+							xhr.send(); //send the commit request.
+							xhr.onreadystatechange=function() {
+								if (xhr.readyState==4) {
+									switch(xhr.status) {
+										case 200:
+										case 201:
+										//document.getElementById("response").innerHTML=xhr.responseText;
+											response.commited = 'committed';
+											callback(response);
+											break;
+										default:
+											alert('commit failed');
+											console.log(JSON.parse(xhr.responseText));
+									}
+								}
+							}
+						}
+						else {
+							callback(response);
+						}
+						break;
+					default:
+						alert('something went wrong');
+						console.log(response);
 				}
-				//console.log(aService);
-				//load(service);
 			}
+			
 		}
-		callback(response);
+
 	}
 	function pService() {
 		//var aService;
@@ -59,5 +88,5 @@ var neo4J = (function() {
 	pService();
 	
 	
-	return {service : function() { return pService();}}
+	return {service : function() { return pService();}, query: rQuery}
 })(); 

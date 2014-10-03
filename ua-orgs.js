@@ -65,15 +65,16 @@ function uaOrgs(data) {
 				name: data[i].UaOrg.name,
 				orgId: data[i].UaOrg.id,
 				parentOrgId: data[i].UaOrg.parent_id,
+				finParentOrgId: data[i].UaOrg.fin_parent_code,
+				hrParentOrgId: data[i].UaOrg.hr_parent_code,
 				financial: data[i].UaOrg.finOnly,
 				hr: data[i].UaOrg.hrOnly,
 				hrAndFin: data[i].UaOrg.hrAndFin,
 				cyRcuDesr: (data[i].UaOrg.CY_RCU_DESCR === null) ? "0": data[i].UaOrg.CY_RCU_DESCR,
 				cyRcuGroup: (data[i].UaOrg.CY_RCU_GROUP === null) ? "0": data[i].UaOrg.CY_RCU_GROUP
+
 			}
 		);	
-	
-
 	}
 	wrapper.statements.push(query);
 	console.log( wrapper);
@@ -82,5 +83,10 @@ function uaOrgs(data) {
 	neo4J.query(wrapper, loaded, true);
 }
 function loaded(response) {
-	console.log(response);
+	//now add the relationships.
+	var i, k;
+	//results.data[i].row[0] 
+	for(i = 0; i < data.length; i++) {
+		
+	}
 }

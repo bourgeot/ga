@@ -2,7 +2,17 @@ function uaOrgs(data) {
 	var i, k, root = {}, rootId = 'UNAZ', prop, bFound = false,
 		//payload =[],
 		wrapper = {statements:[]},
-		query = {statement: "CREATE (n:UaOrg {orgs}) Return n", parameters: {orgs: []}};
+		query = {statement: "", parameters: {orgs: []}};
+		//query = {statement: "CREATE (n:UaOrg {orgs}) Return n", parameters: {orgs: []}};
+		//going to use labels :UaOrg, :Financial, :HR
+		//adding relationships [:PARENT], [:CHILD], [:ISOMORPH]
+		//for financial nodes add the RCM data fields.
+		/*
+			q = "CREATE (n:UaOrg:Financial {orgs}) Return n";
+			q = "CREATE (n:UaOrg:HR {orgs}) Return n";
+			
+		
+		*/
 	//name, id, children, parent.
 	//for d3 the tree root has no parent.
 	for(i=data.length - 1; i >= 0; i--) {
@@ -87,6 +97,8 @@ function loaded(response) {
 	var i, k;
 	//results.data[i].row[0] 
 	for(i = 0; i < data.length; i++) {
-		
+		//for each element, add three relationships and some labels
+		//and maybe some nodes as well.
+		//posting to db/data/node/#/labels
 	}
 }

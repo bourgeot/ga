@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<head>
+	<title>2014 IT SUMMIT: Introduction to Graph Databases</title>
+	<style type="text/css">
+	.node {
+	  fill: #000;
+	}
+	circle.breeder {
+		fill: orange;
+	}
+	circle {
+		fill: steelblue;
+	}
+	.link {
+	  stroke: #999;
+	}
+	.tick line {
+	  shape-rendering: crispEdges;
+	  stroke: #000;
+	}
+
+	line.minor  {
+	  stroke: #777;
+	  stroke-dasharray: 2,2;
+	}
+
+	path.domain {
+	  fill: none;
+	  stroke: black;
+	}
+	</style>
+</head>
+<body>
+	<div id="main-controls">
+		<button onclick="Summit.start()">Start</button>
+		<button onclick="next()">Next</button>
+	</div>
+	<div id="pane-controls"></div>
+	<div id="visual-pane"><svg style="width:525px;height:525px;border:1px lightgray solid;" /></div>
+</body>
+<footer>
+	<script type="text/javascript" src="d3.min.js"></script>
+	<script type="text/javascript" src="summit.js"></script>
+</footer>
+</html>

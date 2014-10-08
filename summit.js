@@ -1,5 +1,6 @@
 var Summit = (function() {
 	var _frame = 0,
+		RADIUS = 9,
 		CELLSIZE = 17,    //size of the adjacency matrix rectangle
 		KNOWPROB = 0.6,  //probability that source KNOWS target
 		LIKEPROB = 0.5,  //probability that source LIKES target
@@ -47,7 +48,22 @@ var Summit = (function() {
 			likes = [],
 			yums =[];
 		var edges = [{source: 'A', target: 'B', weight: 3}];
-		createAdjacencyMatrix(classRoom,edges);
+		d3.select('svg').append('g')
+			.attr('id', 'classroom')
+			.attr('transform', 'translate(10,10)')
+		.selectAll('circle')
+			.data(classRoom)
+			.enter()
+			.append('circle')
+			.attr('r', 0)
+			//.attr('r', CELLSIZE)
+				.attr('cx', function (d, i) {return (i * RADIUS * 2.3);})
+				.attr('cy', function (d, i) {return RADIUS;})
+				.style('stroke', 'black')
+				.style('stroke-width', '1px')
+				.style('fill', 'red')
+				.style('fill-opacity', function (d) {return d.weight * .2}).transition().duration(1250).attr('r', RADIUS);
+		//createAdjacencyMatrix(classRoom,edges);
 	}
 	function addNode(node, list, sendIt) {
 		//add a node to the list (and push it to db)
@@ -69,7 +85,11 @@ var Summit = (function() {
 			.attr("width", w)
 			.attr("height", h);
 
-		var vNodes = svg.selectAll('circle')
+		var vNodes = svg
+			.append('g')
+			.attr("transform", "translate(20,20)")
+			.attr("id", "classroom")
+			.selectAll('circle')
 			.data(nodes)
 			.enter()
 			.append('circle')

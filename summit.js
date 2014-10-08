@@ -1,69 +1,116 @@
 var Summit = (function() {
 	var _frame = 0,
-		RADIUS = 9,
+		RADIUS = 10,
+		DISPLAY = 640,
 		CELLSIZE = 17,    //size of the adjacency matrix rectangle
 		KNOWPROB = 0.6,  //probability that source KNOWS target
 		LIKEPROB = 0.5,  //probability that source LIKES target
-		YUMPROB = 0.1,    //probability that source YUMS target
+		CRAVEPROB = 0.1,    //probability that source CRAVES target
 		_svg,
 		_teacher,
 		_students,
-		_yum,
+		_crave,
 		_likes=[],
 		_knows=[],
-		_yums=[];
+		_craves=[];
 		
 	function setup() {
-		var teacher = {name:'zero', teacher: true},
+		var teacher = {name:'00', teacher: true},
 			classRoom = [
 				teacher,
-				{name: 'A'},
-				{name: 'B'},
-				{name: 'C'},
-				{name: 'D'},
-				{name: 'E'},
-				{name: 'F'},
-				{name: 'G'},
-				{name: 'H'},
-				{name: 'I'},
-				{name: 'J'},
-				{name: 'K'},
-				{name: 'L'},
-				{name: 'M'},
-				{name: 'N'},
-				{name: 'O'},
-				{name: 'P'},
-				{name: 'Q'},
-				{name: 'R'},
-				{name: 'S'},
-				{name: 'T'},
-				{name: 'U'},
-				{name: 'V'},
-				{name: 'W'},
-				{name: 'X'},
-				{name: 'Y'},
-				{name: 'Z'}
+				{name: 'A', student: true},
+				{name: 'B', student: true},
+				{name: 'C', student: true},
+				{name: 'D', student: true},
+				{name: 'E', student: true},
+				{name: 'F', student: true},
+				{name: 'G', student: true},
+				{name: 'H', student: true},
+				{name: 'I', student: true},
+				{name: 'J', student: true},
+				{name: 'K', student: true},
+				{name: 'L', student: true},
+				{name: 'M', student: true},
+				{name: 'N', student: true},
+				{name: 'O', student: true},
+				{name: 'P', student: true},
+				{name: 'Q', student: true},
+				{name: 'R', student: true},
+				{name: 'S', student: true},
+				{name: 'T', student: true},
+				{name: 'U', student: true},
+				{name: 'V', student: true},
+				{name: 'W', student: true},
+				{name: 'X', student: true},
+				{name: 'Y', student: true},
+				{name: 'Z', student: true}
 			],
 			knows = [],
 			likes = [],
-			yums =[];
+			craves =[];
+		var dSvg, dClassRoomGX, dClassRoomGY, dClassMatesX, dClassMatesY, dCircles;
 		var edges = [{source: 'A', target: 'B', weight: 3}];
-		d3.select('svg').append('g')
-			.attr('id', 'classroom')
-			.attr('transform', 'translate(10,10)')
-		.selectAll('circle')
+		dClassRoomGX = d3.select('svg').append('g')
+			.attr('id', 'classroom-X')
+			.attr('transform', 'translate(40,3)');
+		dClassMatesX = dClassRoomGX
+			.selectAll('g')
 			.data(classRoom)
 			.enter()
-			.append('circle')
-			.attr('r', 0)
-			//.attr('r', CELLSIZE)
-				.attr('cx', function (d, i) {return (i * RADIUS * 2.3);})
-				.attr('cy', function (d, i) {return RADIUS;})
+			.append('g')
+			.attr('transform', function(d, i) { return 'translate(' + i * RADIUS * 2.3 + ', ' + RADIUS + ')';});
+		dClassMatesX.append('text')
+				.attr('text-anchor', 'middle')
+				.text(function(d) {return d.name;})
+				.attr('font-family', 'sans-serif')
+				.attr('font-size', RADIUS)
+				.attr('y', 0.33 * RADIUS)
+				.attr('fill', 'none')
+				.transition().duration(1250)
+				.attr('fill', 'black')
+				.attr('font-weight', 'bold');
+		dClassMatesX.append('circle')
+				.attr('r', 0)
+				//.attr('cx', function (d, i) {return (i * RADIUS * 2.3);})
+				//.attr('cy', function (d, i) {return RADIUS;})
 				.style('stroke', 'black')
 				.style('stroke-width', '1px')
-				.style('fill', 'red')
-				.style('fill-opacity', function (d) {return d.weight * .2}).transition().duration(1250).attr('r', RADIUS);
-		//createAdjacencyMatrix(classRoom,edges);
+				.style('fill', 'steelblue')
+				.style('fill-opacity', 0.3)
+				.transition().duration(1250)
+				.attr('r', RADIUS);
+				
+		dClassRoomGY = d3.select('svg').append('g')
+			.attr('id', 'classroom-X')
+			.attr('transform', 'translate(9, 33)');				
+		dClassMatesY = dClassRoomGY
+			.selectAll('g')
+			.data(classRoom)
+			.enter()
+			.append('g')
+			.attr('transform', function(d, i) { return 'translate(' + RADIUS + ', ' + i * RADIUS * 2.3 + ')';});
+		dClassMatesY.append('text')
+				.attr('text-anchor', 'middle')
+				.text(function(d) {return d.name;})
+				.attr('font-family', 'sans-serif')
+				.attr('font-size', RADIUS)
+				.attr('y', 0.33 * RADIUS)
+				.attr('fill', 'none')
+				.transition().duration(1250)
+				.attr('fill', 'black')
+				.attr('font-weight', 'bold');
+		dClassMatesY.append('circle')
+				.attr('r', 0)
+				//.attr('cx', function (d, i) {return (i * RADIUS * 2.3);})
+				//.attr('cy', function (d, i) {return RADIUS;})
+				.style('stroke', 'black')
+				.style('stroke-width', '1px')
+				.style('fill', 'steelblue')
+				.style('fill-opacity', 0.3)
+				.transition().duration(1250)
+				.attr('r', RADIUS);
+
+		createAdjacencyMatrix(classRoom,edges);
 	}
 	function addNode(node, list, sendIt) {
 		//add a node to the list (and push it to db)
@@ -78,32 +125,6 @@ var Summit = (function() {
 		//console.log(k);
 	}
 	
-	function diagramSimulation(nodes,links) {
-		//draw a diagram
-		var w = 900, h = 500;
-		var svg = d3.select("#vis").append("svg")
-			.attr("width", w)
-			.attr("height", h);
-
-		var vNodes = svg
-			.append('g')
-			.attr("transform", "translate(20,20)")
-			.attr("id", "classroom")
-			.selectAll('circle')
-			.data(nodes)
-			.enter()
-			.append('circle')
-			.attr('r', 3)
-			.attr('cx', function(d) {
-				return 20*Math.floor(d.key / 1000);
-			})
-			.attr('cy', function(d) {
-				return 20*(d.key - 1000*Math.floor(d.key / 1000)) + 5;
-			})
-			.attr('key', function(d) {return d.key;})
-			.attr('class', function(d) { if (d.fate > 3) return 'breeder';});
-			
-	}
 	function createAdjacencyMatrix(nodes,edges) {
       var edgeHash = {};
       for (x in edges) {
@@ -125,29 +146,29 @@ var Summit = (function() {
       //console.log(matrix);
       d3.select("svg")
       .append("g")
-      .attr("transform", "translate(" + (CELLSIZE + 4) * 2 + ", " + (CELLSIZE + 4) * 2 + ")")
+      .attr("transform", "translate(30,23)")
       .attr("id", "adjacencyG")
       .selectAll("rect")
       .data(matrix)
       .enter()
       .append("rect")
-      .attr("width", CELLSIZE)
-      .attr("height", CELLSIZE)
-      .attr("x", function (d) {return d.x * CELLSIZE})
-      .attr("y", function (d) {return d.y * CELLSIZE})
+      .attr("width", RADIUS * 2)
+      .attr("height", RADIUS * 2)
+      .attr("x", function (d) {return d.x * RADIUS * 2.3;})
+      .attr("y", function (d) {return d.y * RADIUS * 2.3})
       .style("stroke", "black")
       .style("stroke-width", "1px")
       .style("fill", "red")
-      .style("fill-opacity", function (d) {return d.weight * .2})
+      .style("fill-opacity", function (d) {return d.weight * .2;})
       .on("mouseover", gridOver)
       
-      var scaleSize = nodes.length * CELLSIZE;
-      var nameScale = d3.scale.ordinal().domain(nodes.map(function (el) {return el.name})).rangePoints([0,scaleSize],1);
+      //var scaleSize = nodes.length * CELLSIZE;
+      //var nameScale = d3.scale.ordinal().domain(nodes.map(function (el) {return el.name})).rangePoints([0,scaleSize],1);
       
-      xAxis = d3.svg.axis().scale(nameScale).orient("top").tickSize(4);    
-      yAxis = d3.svg.axis().scale(nameScale).orient("left").tickSize(4);    
-      d3.select("#adjacencyG").append("g").call(xAxis).selectAll("text").transition().style("text-anchor", "end").attr("transform", "translate(-10,-10) rotate(90)");
-      d3.select("#adjacencyG").append("g").call(yAxis);
+      //xAxis = d3.svg.axis().scale(nameScale).orient("top").tickSize(4);    
+     // yAxis = d3.svg.axis().scale(nameScale).orient("left").tickSize(4);    
+      //d3.select("#adjacencyG").append("g").call(xAxis); //.selectAll("text").transition().style("text-anchor", "end").attr("transform", "translate(-10,-10) rotate(90)");
+      //d3.select("#adjacencyG").append("g").call(yAxis);
       
       function gridOver(d,i) {
         d3.selectAll("rect").style("stroke-width", function (p) {return p.x == d.x || p.y == d.y ? "3px" : "1px"})

@@ -3,59 +3,55 @@ var Summit = (function() {
 		RADIUS = 10,
 		DISPLAY = 640,
 		CELLSIZE = 17,    //size of the adjacency matrix rectangle
-		KNOWPROB = 0.6,  //probability that source KNOWS target
-		LIKEPROB = 0.5,  //probability that source LIKES target
-		CRAVEPROB = 0.1,    //probability that source CRAVES target
+		KNOWPROB = 0.4,  //probability that source KNOWS target
+		LIKEPROB = 0.2,  //probability that source LIKES target
+		RECOMMENDSPROB = 0.1,    //probability that source RECOMMENDS [to] target
 		_svg,
 		_teacher,
+		_classRoom = [],
 		_students,
-		_crave,
-		_likes=[],
-		_knows=[],
-		_craves=[];
+		_relationships = [];
 		
 	function setup() {
-		var teacher = {name:'00', teacher: true},
-			classRoom = [
-				teacher,
-				{name: 'A', student: true},
-				{name: 'B', student: true},
-				{name: 'C', student: true},
-				{name: 'D', student: true},
-				{name: 'E', student: true},
-				{name: 'F', student: true},
-				{name: 'G', student: true},
-				{name: 'H', student: true},
-				{name: 'I', student: true},
-				{name: 'J', student: true},
-				{name: 'K', student: true},
-				{name: 'L', student: true},
-				{name: 'M', student: true},
-				{name: 'N', student: true},
-				{name: 'O', student: true},
-				{name: 'P', student: true},
-				{name: 'Q', student: true},
-				{name: 'R', student: true},
-				{name: 'S', student: true},
-				{name: 'T', student: true},
-				{name: 'U', student: true},
-				{name: 'V', student: true},
-				{name: 'W', student: true},
-				{name: 'X', student: true},
-				{name: 'Y', student: true},
-				{name: 'Z', student: true}
-			],
-			knows = [],
-			likes = [],
-			craves =[];
+		_teacher = {name:'00', teacher: true};
+		_classRoom = [
+			_teacher,
+			{name: 'A', student: true},
+			{name: 'B', student: true},
+			{name: 'C', student: true},
+			{name: 'D', student: true},
+			{name: 'E', student: true},
+			{name: 'F', student: true},
+			{name: 'G', student: true},
+			{name: 'H', student: true},
+			{name: 'I', student: true},
+			{name: 'J', student: true},
+			{name: 'K', student: true},
+			{name: 'L', student: true},
+			{name: 'M', student: true},
+			{name: 'N', student: true},
+			{name: 'O', student: true},
+			{name: 'P', student: true},
+			{name: 'Q', student: true},
+			{name: 'R', student: true},
+			{name: 'S', student: true},
+			{name: 'T', student: true},
+			{name: 'U', student: true},
+			{name: 'V', student: true},
+			{name: 'W', student: true},
+			{name: 'X', student: true},
+			{name: 'Y', student: true},
+			{name: 'Z', student: true}
+		];
+		setupRelationships();
 		var dSvg, dClassRoomGX, dClassRoomGY, dClassMatesX, dClassMatesY, dCircles;
-		var edges = [{source: 'A', target: 'B', weight: 3}];
+		//var edges = [{source: 'A', target: 'B', weight: 3}];
 		dClassRoomGX = d3.select('svg').append('g')
 			.attr('id', 'classroom-X')
 			.attr('transform', 'translate(40,3)');
 		dClassMatesX = dClassRoomGX
 			.selectAll('g')
-			.data(classRoom)
+			.data(_classRoom)
 			.enter()
 			.append('g')
 			.attr('transform', function(d, i) { return 'translate(' + i * RADIUS * 2.3 + ', ' + RADIUS + ')';});
@@ -85,7 +81,7 @@ var Summit = (function() {
 			.attr('transform', 'translate(9, 33)');				
 		dClassMatesY = dClassRoomGY
 			.selectAll('g')
-			.data(classRoom)
+			.data(_classRoom)
 			.enter()
 			.append('g')
 			.attr('transform', function(d, i) { return 'translate(' + RADIUS + ', ' + i * RADIUS * 2.3 + ')';});
@@ -110,40 +106,72 @@ var Summit = (function() {
 				.transition().duration(1250)
 				.attr('r', RADIUS);
 
-		createAdjacencyMatrix(classRoom,edges);
+		createAdjacencyMatrix(_classRoom,_relationships);
 	}
-	function addNode(node, list, sendIt) {
+	
+	function addNode(node, list) {
 		//add a node to the list (and push it to db)
 		list.push(node);
-		if (sendIt) {
-			//send it along to the database
-		}
-		
 	}
-	function addRelationship(relType, source, target, sendIt) {
-		
-		//console.log(k);
+	function addRelationship(relType, source, target) {
+		relationships.push({source: source, target: target, type: relType});
+		return relationships;
+	}
+	function setupRelationships() {
+		var i, j, r, m, relProb = [[KNOWPROB, 'KNOWS'], [LIKEPROB, 'LIKES']];
+		console.log(relProb);
+		for (i = 0; i < _classRoom.length; i++) {
+			for (j = 0; j < _classRoom.length; j++) {
+				if (i == j) {
+					continue;
+				}
+				for (r = 0; r < 2; r++) {
+					m = Math.random();
+
+					if (m <= relProb[r][0]) {					
+						_relationships.push( 
+							{ 
+								source: _classRoom[i],
+								target: _classRoom[j],
+								type: relProb[r][1] 
+							}
+						);
+					}
+				}
+			}
+		}
+		//console.log(_relationships);
 	}
 	
 	function createAdjacencyMatrix(nodes,edges) {
-      var edgeHash = {};
+      var edgeHash = {}, id, n;
       for (x in edges) {
-        var id = edges[x].source + "-" + edges[x].target;
-        edgeHash[id] = edges[x];
+        id = edges[x].source.name + "-" + edges[x].target.name;
+		if (edgeHash[id] === undefined) {
+			edgeHash[id] = edges[x].type;
+		}
+		else {
+			edgeHash[id] = edgeHash[id] + edges[x].type;
+			//console.log(edgeHash[id]);
+		}
       }
       matrix = [];
+	  console.log(edgeHash);
       //create all possible edges
       for (a in nodes) {
         for (b in nodes) {
-          //var grid = {id: nodes[a].id + "-" + nodes[b].id, x: b, y: a, weight: 0};
-          var grid = {id: nodes[a].name + "-" + nodes[b].name, x: b, y: a, weight: 0};
-          if (edgeHash[grid.id]) {
-            grid.weight = edgeHash[grid.id].weight;
+          var grid = {id: nodes[a].name + "-" + nodes[b].name, x: b, y: a, type: ''};
+          if (edgeHash[grid.id] === undefined) {
+			continue;
+		}
+		else {
+			//console.log(edgeHash[grid.id]);
+			grid.type = edgeHash[grid.id];
           }
           matrix.push(grid);
         }
       }
-      //console.log(matrix);
+      console.log(matrix);
       d3.select("svg")
       .append("g")
       .attr("transform", "translate(30,23)")
@@ -158,8 +186,20 @@ var Summit = (function() {
       .attr("y", function (d) {return d.y * RADIUS * 2.3})
       .style("stroke", "black")
       .style("stroke-width", "1px")
-      .style("fill", "red")
-      .style("fill-opacity", function (d) {return d.weight * .2;})
+      .style("fill", function (d) {
+		var f;
+		//console.log (d.type);
+		if (d.type == 'KNOWS') {
+			f = 'blue';
+		}
+		else if (d.type == 'LIKES') {
+			f = 'red';
+		}
+		else {
+			f = 'purple';
+		}
+		return f;
+	  })
       .on("mouseover", gridOver)
       
       //var scaleSize = nodes.length * CELLSIZE;

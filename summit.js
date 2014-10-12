@@ -43,6 +43,8 @@ var Summit = (function() {
 			{name: 'Y', student: true},
 			{name: 'Z', student: true}
 		];
+		//ship it
+		send(_classRoom,'nodes', dbStatus);
 		setupRelationships();
 		var dSvg, dClassRoomGX, dClassRoomGY, dClassMatesX, dClassMatesY, dCircles;
 		//var edges = [{source: 'A', target: 'B', weight: 3}];
@@ -108,18 +110,12 @@ var Summit = (function() {
 
 		createAdjacencyMatrix(_classRoom,_relationships);
 	}
-	
-	function addNode(node, list) {
-		//add a node to the list (and push it to db)
-		list.push(node);
-	}
-	function addRelationship(relType, source, target) {
-		relationships.push({source: source, target: target, type: relType});
-		return relationships;
-	}
+
 	function setupRelationships() {
 		var i, j, r, m, relProb = [[KNOWPROB, 'KNOWS'], [LIKEPROB, 'LIKES']];
-		console.log(relProb);
+		//console.log(relProb);
+
+		
 		for (i = 0; i < _classRoom.length; i++) {
 			for (j = 0; j < _classRoom.length; j++) {
 				if (i == j) {
@@ -127,7 +123,15 @@ var Summit = (function() {
 				}
 				for (r = 0; r < 2; r++) {
 					m = Math.random();
-
+					//teacher knows everyone but likes no one.
+					if(_classRoom[i].teacher == true) {
+						if (relProb[r][1] == 'KNOWS') {
+							m = 0.001;
+						}
+						else {
+							m = .999;
+						}
+					}
 					if (m <= relProb[r][0]) {					
 						_relationships.push( 
 							{ 
@@ -140,7 +144,8 @@ var Summit = (function() {
 				}
 			}
 		}
-		//console.log(_relationships);
+		console.log(_relationships.length);
+		send(_relationships, 'relationships', dbStatus);
 	}
 	
 	function createAdjacencyMatrix(nodes,edges) {
@@ -156,7 +161,7 @@ var Summit = (function() {
 		}
       }
       matrix = [];
-	  console.log(edgeHash);
+	  //console.log(edgeHash);
       //create all possible edges
       for (a in nodes) {
         for (b in nodes) {
@@ -171,7 +176,7 @@ var Summit = (function() {
           matrix.push(grid);
         }
       }
-      console.log(matrix);
+      //console.log(matrix);
       d3.select("svg")
       .append("g")
       .attr("transform", "translate(30,23)")
@@ -215,5 +220,58 @@ var Summit = (function() {
       }
 
     }
-	return {start: function() {return setup();}};
+	
+	function reset() {
+		//if the service is available then reset the database to remove all the relationships and delete
+		//the nodes
+		var q= {statements:[ 
+			{statement: "MATCH (:Person)-[r:KNOWS]-(:Person) DELETE r"},
+			{statement: "MATCH (:Person)-[r:LIKES]-(:Person) DELETE r"},
+			{statement: "MATCH (n:Person) DELETE n"}
+		]};
+		neo4J.query(q, dbStatus, true);
+	}
+	function dbStatus(result) {
+		console.log(result);
+	}
+	function send(array, arrayType, callback) {
+		//send the array to the database
+	/*
+		query = {statements:[]};
+		var cQ = {statement: 'CREATE (n:Person {nodes}) RETURN n', parameters: {}};
+		cQ.parameters = {nodes: data};
+		query.statements.push(cQ);
+	*/
+		var i,q = {statements:[]};
+		switch (arrayType) {
+			case 'nodes':
+				q.statements.push(
+					{
+						statement: "CREATE (n:Person {nodes}) RETURN n",
+						parameters: {nodes: array}
+					}
+				);
+			break;
+			case 'relationships':
+				for(i=0; i<array.length; i++) {
+					q.statements.push(
+						{
+							statement: "MATCH (m:Person {name: '" + array[i].source.name 
+							+ "'}), (n:Person {name: '" + array[i].target.name 
+							+ "'})  CREATE (m)-[:" + array[i].type + "]->(n) RETURN m.name, n.name"
+
+						}
+					);
+				}
+			
+			break;
+			default:
+		}
+		neo4J.query(q, callback, true);
+	}
+	//return public methods
+	return {
+		start: function() {return setup();}, 
+		reset: function() {return reset();}
+	};
 }) ();

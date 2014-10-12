@@ -25,12 +25,18 @@
 	  fill: none;
 	  stroke: black;
 	}
+	#main-controls {
+		float: right;
+		width: 50px;
+	}
 	</style>
 </head>
 <body>
 	<div id="main-controls">
 		<button onclick="Summit.start()">Start</button>
 		<button onclick="next()">Next</button>
+		<button onclick="Summit.reset()">Reset</button>
+		<button onclick="Summit.send()">Send</button>
 	</div>
 	<div id="pane-controls"></div>
 	<div id="visual-pane"><svg style="width: 660px;height: 650px;border:1px lightgray solid;" /></div>

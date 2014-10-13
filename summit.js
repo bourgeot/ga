@@ -10,9 +10,11 @@ var Summit = (function() {
 		_teacher,
 		_classRoom = [],
 		_students,
+		_counter = 0,
 		_relationships = [];
 		
 	function setup() {
+		_counter = 0;
 		_teacher = {name:'00', teacher: true};
 		_classRoom = [
 			_teacher,
@@ -43,9 +45,7 @@ var Summit = (function() {
 			{name: 'Y', student: true},
 			{name: 'Z', student: true}
 		];
-		//ship it
-		send(_classRoom,'nodes', dbStatus);
-		setupRelationships();
+		//setupRelationships();
 		var dSvg, dClassRoomGX, dClassRoomGY, dClassMatesX, dClassMatesY, dCircles;
 		//var edges = [{source: 'A', target: 'B', weight: 3}];
 		dClassRoomGX = d3.select('svg').append('g')
@@ -107,15 +107,14 @@ var Summit = (function() {
 				.style('fill-opacity', 0.3)
 				.transition().duration(1250)
 				.attr('r', RADIUS);
-
-		createAdjacencyMatrix(_classRoom,_relationships);
+		//ship it
+		send(_classRoom,'nodes', dbStatus);
+		//createAdjacencyMatrix(_classRoom,_relationships);
 	}
 
 	function setupRelationships() {
 		var i, j, r, m, relProb = [[KNOWPROB, 'KNOWS'], [LIKEPROB, 'LIKES']];
 		//console.log(relProb);
-
-		
 		for (i = 0; i < _classRoom.length; i++) {
 			for (j = 0; j < _classRoom.length; j++) {
 				if (i == j) {
@@ -205,7 +204,8 @@ var Summit = (function() {
 		}
 		return f;
 	  })
-      .on("mouseover", gridOver)
+      .on("mouseover", gridOver);
+	  dbStatus('matrix done');
       
       //var scaleSize = nodes.length * CELLSIZE;
       //var nameScale = d3.scale.ordinal().domain(nodes.map(function (el) {return el.name})).rangePoints([0,scaleSize],1);
@@ -229,10 +229,34 @@ var Summit = (function() {
 			{statement: "MATCH (:Person)-[r:LIKES]-(:Person) DELETE r"},
 			{statement: "MATCH (n:Person) DELETE n"}
 		]};
+		_counter = 5;
 		neo4J.query(q, dbStatus, true);
 	}
 	function dbStatus(result) {
-		console.log(result);
+		switch(_counter) {
+			case 0:
+				_counter++;
+				console.log(result);
+				setupRelationships();
+			break;
+			case 1:
+				_counter++;
+				console.log(result);
+				createAdjacencyMatrix(_classRoom, _relationships);
+			break;
+			case 2:
+				_counter++;
+				alert('check neo');
+				console.log(result);
+				network();
+			break;
+			case 3:
+				_counter++;
+				alert(_counter);
+			break;
+			default:
+				console.log(result);
+		}
 	}
 	function send(array, arrayType, callback) {
 		//send the array to the database
@@ -269,9 +293,25 @@ var Summit = (function() {
 		}
 		neo4J.query(q, callback, true);
 	}
+	function network() {
+		var radius = 250,
+			theta = 0,
+			i, j, x, y,
+			step = 2 * Math.PI / _classRoom.length;
+			
+		console.log(step);
+		for(i = 0; i < _classRoom.length; i++) {
+			theta = theta + (i * step);
+			x = radius * Math.cos(theta) + 300;
+			y = radius * Math.sin(theta) + 300;
+			//console.log([x,y]);
+		}
+		dbStatus('network done');
+	}
 	//return public methods
 	return {
 		start: function() {return setup();}, 
-		reset: function() {return reset();}
+		reset: function() {return reset();},
+		next: function() {return next(); }
 	};
 }) ();

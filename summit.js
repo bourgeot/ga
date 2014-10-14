@@ -9,6 +9,8 @@ var Summit = (function() {
 		_svg,
 		_teacher,
 		_classRoom = [],
+		_classRoomG,
+		_adjacencyG,
 		_students,
 		_counter = 0,
 		_relationships = [];
@@ -48,10 +50,10 @@ var Summit = (function() {
 		//setupRelationships();
 		var dSvg, dClassRoomGX, dClassRoomGY, dClassMatesX, dClassMatesY, dCircles;
 		//var edges = [{source: 'A', target: 'B', weight: 3}];
-		dClassRoomGX = d3.select('svg').append('g')
+		_classRoomG = d3.select('svg').append('g')
 			.attr('id', 'classroom-X')
 			.attr('transform', 'translate(40,3)');
-		dClassMatesX = dClassRoomGX
+		dClassMatesX = _classRoomG
 			.selectAll('g')
 			.data(_classRoom)
 			.enter()
@@ -176,35 +178,35 @@ var Summit = (function() {
         }
       }
       //console.log(matrix);
-      d3.select("svg")
-      .append("g")
-      .attr("transform", "translate(30,23)")
-      .attr("id", "adjacencyG")
-      .selectAll("rect")
-      .data(matrix)
-      .enter()
-      .append("rect")
-      .attr("width", RADIUS * 2)
-      .attr("height", RADIUS * 2)
-      .attr("x", function (d) {return d.x * RADIUS * 2.3;})
-      .attr("y", function (d) {return d.y * RADIUS * 2.3})
-      .style("stroke", "black")
-      .style("stroke-width", "1px")
-      .style("fill", function (d) {
-		var f;
-		//console.log (d.type);
-		if (d.type == 'KNOWS') {
-			f = 'blue';
-		}
-		else if (d.type == 'LIKES') {
-			f = 'red';
-		}
-		else {
-			f = 'purple';
-		}
-		return f;
-	  })
-      .on("mouseover", gridOver);
+      _adjacencyG = d3.select("svg")
+		.append("g")
+		.attr("transform", "translate(30,23)")
+		.attr("id", "adjacencyG");
+      _adjacencyG.selectAll("rect")
+		  .data(matrix)
+		  .enter()
+		  .append("rect")
+		  .attr("width", RADIUS * 2)
+		  .attr("height", RADIUS * 2)
+		  .attr("x", function (d) {return d.x * RADIUS * 2.3;})
+		  .attr("y", function (d) {return d.y * RADIUS * 2.3})
+		  .style("stroke", "black")
+		  .style("stroke-width", "1px")
+		  .style("fill", function (d) {
+			var f;
+			//console.log (d.type);
+			if (d.type == 'KNOWS') {
+				f = 'blue';
+			}
+			else if (d.type == 'LIKES') {
+				f = 'red';
+			}
+			else {
+				f = 'purple';
+			}
+			return f;
+		  })
+		  .on("mouseover", gridOver);
 	  dbStatus('matrix done');
       
       //var scaleSize = nodes.length * CELLSIZE;
@@ -246,13 +248,13 @@ var Summit = (function() {
 			break;
 			case 2:
 				_counter++;
-				alert('check neo');
+				//alert('check neo');
 				console.log(result);
 				network();
 			break;
 			case 3:
 				_counter++;
-				alert(_counter);
+				//alert(_counter);
 			break;
 			default:
 				console.log(result);
@@ -295,17 +297,23 @@ var Summit = (function() {
 	}
 	function network() {
 		var radius = 250,
+			offset = 300,
 			theta = 0,
 			i, j, x, y,
 			step = 2 * Math.PI / _classRoom.length;
-			
-		console.log(step);
-		for(i = 0; i < _classRoom.length; i++) {
-			theta = theta + (i * step);
-			x = radius * Math.cos(theta) + 300;
-			y = radius * Math.sin(theta) + 300;
-			//console.log([x,y]);
-		}
+		//d3.select('#adjacencyG').selectAll('rect')
+			//.transition().style('fill-opacity', '0.0').style('stroke-opacity', '0.0');
+		d3.select('#classroom-X').selectAll('g')
+			.data(_classRoom)
+			.transition(2000)
+			.attr('transform', 
+				function(d, i) {
+					var step = 2 * Math.PI / _classRoom.length,
+						radius = 250,
+						offset = 300;
+					return 'translate(' + (radius * Math.cos(step * i) + offset) + ', ' + (radius * Math.sin(step * i) + offset) + ')';
+				}
+			);
 		dbStatus('network done');
 	}
 	//return public methods

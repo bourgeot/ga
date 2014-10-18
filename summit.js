@@ -10,56 +10,72 @@ var Summit = (function() {
 		_teacher,
 		_classRoom = [],
 		_classRoomG,
+		_classMatesG,
 		_adjacencyG,
 		_students,
 		_counter = 0,
 		_relationships = [];
+	var nextButton = document.getElementById('next-button'),
+		disabled = document.createAttribute('disabled');
+		disabled.value = 'disabled';
 		
 	function setup() {
+		nextButton.attributes.setNamedItem(disabled);
 		_counter = 0;
-		_teacher = {name:'00', teacher: true};
+		_teacher = {name:'00', teacher: true, x: 0, y: 0};
 		_classRoom = [
 			_teacher,
-			{name: 'A', student: true},
-			{name: 'B', student: true},
-			{name: 'C', student: true},
-			{name: 'D', student: true},
-			{name: 'E', student: true},
-			{name: 'F', student: true},
-			{name: 'G', student: true},
-			{name: 'H', student: true},
-			{name: 'I', student: true},
-			{name: 'J', student: true},
-			{name: 'K', student: true},
-			{name: 'L', student: true},
-			{name: 'M', student: true},
-			{name: 'N', student: true},
-			{name: 'O', student: true},
-			{name: 'P', student: true},
-			{name: 'Q', student: true},
-			{name: 'R', student: true},
-			{name: 'S', student: true},
-			{name: 'T', student: true},
-			{name: 'U', student: true},
-			{name: 'V', student: true},
-			{name: 'W', student: true},
-			{name: 'X', student: true},
-			{name: 'Y', student: true},
-			{name: 'Z', student: true}
+			{name: 'A', student: true, x: 0, y: 0},
+			{name: 'B', student: true, x: 0, y: 0},
+			{name: 'C', student: true, x: 0, y: 0},
+			{name: 'D', student: true, x: 0, y: 0},
+			{name: 'E', student: true, x: 0, y: 0},
+			{name: 'F', student: true, x: 0, y: 0},
+			{name: 'G', student: true, x: 0, y: 0},
+			{name: 'H', student: true, x: 0, y: 0},
+			{name: 'I', student: true, x: 0, y: 0},
+			{name: 'J', student: true, x: 0, y: 0},
+			{name: 'K', student: true, x: 0, y: 0},
+			{name: 'L', student: true, x: 0, y: 0},
+			{name: 'M', student: true, x: 0, y: 0},
+			{name: 'N', student: true, x: 0, y: 0},
+			{name: 'O', student: true, x: 0, y: 0},
+			{name: 'P', student: true, x: 0, y: 0},
+			{name: 'Q', student: true, x: 0, y: 0},
+			{name: 'R', student: true, x: 0, y: 0},
+			{name: 'S', student: true, x: 0, y: 0},
+			{name: 'T', student: true, x: 0, y: 0},
+			{name: 'U', student: true, x: 0, y: 0},
+			{name: 'V', student: true, x: 0, y: 0},
+			{name: 'W', student: true, x: 0, y: 0},
+			{name: 'X', student: true, x: 0, y: 0},
+			{name: 'Y', student: true, x: 0, y: 0},
+			{name: 'Z', student: true, x: 0, y: 0}
 		];
 		//setupRelationships();
-		var dSvg, dClassRoomGX, dClassRoomGY, dClassMatesX, dClassMatesY, dCircles;
+		var dSvg, dClassRoomGX, dClassRoomGY, dClassMatesY, dCircles;
 		//var edges = [{source: 'A', target: 'B', weight: 3}];
 		_classRoomG = d3.select('svg').append('g')
 			.attr('id', 'classroom-X')
 			.attr('transform', 'translate(40,3)');
-		dClassMatesX = _classRoomG
+		_classMatesG = _classRoomG
 			.selectAll('g')
 			.data(_classRoom)
 			.enter()
 			.append('g')
-			.attr('transform', function(d, i) { return 'translate(' + i * RADIUS * 2.3 + ', ' + RADIUS + ')';});
-		dClassMatesX.append('text')
+			.attr('id', function(d) { return d.name;})
+			.attr('x', function(d, i) { 
+				d.x = i*RADIUS * 2.3;
+				return d.x;
+			})
+			.attr('y', function(d) { 
+				d.y = RADIUS;
+				return d.y;
+			})
+     		.attr('transform', function(d) { return 'translate(' + d.x + ', ' + d.y + ')';});
+
+			//.attr('transform', function(d, i) { return 'translate(' + i * RADIUS * 2.3 + ', ' + RADIUS + ')';});
+		_classMatesG.append('text')
 				.attr('text-anchor', 'middle')
 				.text(function(d) {return d.name;})
 				.attr('font-family', 'sans-serif')
@@ -69,7 +85,7 @@ var Summit = (function() {
 				.transition().duration(1250)
 				.attr('fill', 'black')
 				.attr('font-weight', 'bold');
-		dClassMatesX.append('circle')
+		_classMatesG.append('circle')
 				.attr('r', 0)
 				//.attr('cx', function (d, i) {return (i * RADIUS * 2.3);})
 				//.attr('cy', function (d, i) {return RADIUS;})
@@ -249,10 +265,11 @@ var Summit = (function() {
 			case 2:
 				_counter++;
 				//alert('check neo');
-				console.log(result);
-				network();
+				//console.log(result);
+				network(result);
 			break;
 			case 3:
+				nextButton.attributes.removeNamedItem('disabled');
 				_counter++;
 				//alert(_counter);
 			break;
@@ -284,7 +301,7 @@ var Summit = (function() {
 						{
 							statement: "MATCH (m:Person {name: '" + array[i].source.name 
 							+ "'}), (n:Person {name: '" + array[i].target.name 
-							+ "'})  CREATE (m)-[:" + array[i].type + "]->(n) RETURN m.name, n.name"
+							+ "'})  CREATE (m)-[r:" + array[i].type + "]->(n) RETURN m.name, n.name, type(r)"
 
 						}
 					);
@@ -303,17 +320,50 @@ var Summit = (function() {
 			step = 2 * Math.PI / _classRoom.length;
 		//d3.select('#adjacencyG').selectAll('rect')
 			//.transition().style('fill-opacity', '0.0').style('stroke-opacity', '0.0');
-		d3.select('#classroom-X').selectAll('g')
+		//nodes
+		//d3.select('#classroom-X').selectAll('g')
+		_classMatesG
 			.data(_classRoom)
-			.transition(2000)
 			.attr('transform', 
 				function(d, i) {
-					var step = 2 * Math.PI / _classRoom.length,
-						radius = 250,
-						offset = 300;
 					return 'translate(' + (radius * Math.cos(step * i) + offset) + ', ' + (radius * Math.sin(step * i) + offset) + ')';
 				}
-			);
+			)
+			.attr('x', function(d, i) {
+				d.x = radius * Math.cos(step * i) + offset;
+				return d.x;
+			})
+			.attr('y', function(d, i) { 
+				d.y = radius * Math.sin(step * i) + offset;
+				return d.y;
+			});
+		//lines
+		//console.log(_relationships);
+		d3.select('#classroom-X').append('g').selectAll('path')
+			.data(_relationships)
+			.enter()
+			.append('path')
+			.attr('class', function(d) {
+				return 'link ' + d.type;
+			})
+			.attr('d', function(d) {
+				var dx = d.target.x - d.source.x,
+					dy = d.target.y - d.source.y,
+					dr = Math.sqrt(dx * dx + dy * dy);
+					return "M" + d.source.x + "," + d.source.y + "A" + dr + "," + dr + " 0 0,1 " + d.target.x + "," + d.target.y;
+			});
+		_classMatesG.selectAll('circle')
+						.attr('r', 0)
+				//.attr('cx', function (d, i) {return (i * RADIUS * 2.3);})
+				//.attr('cy', function (d, i) {return RADIUS;})
+				.style('stroke', 'black')
+				.style('stroke-width', '1px')
+				.style('fill', 'steelblue')
+				.style('fill-opacity', 0.9)
+				.transition().duration(750)
+				.attr('r', RADIUS);
+
+		
 		dbStatus('network done');
 	}
 	//return public methods
@@ -323,3 +373,11 @@ var Summit = (function() {
 		next: function() {return next(); }
 	};
 }) ();
+
+/*
+how much is someone liked and known
+match (n)-[r]->(x) return count(n), type(r), x.name order by x.name
+how many does someone know and like
+match (n:Person)-[r]->(x) return n.name, type(r), count(x) order by n.name
+
+*/

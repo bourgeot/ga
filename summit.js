@@ -1,5 +1,7 @@
 var Summit = (function() {
 	var _frame = 0,
+		WIDTH = 950,
+		HEIGHT = 620,
 		RADIUS = 10,
 		DISPLAY = 640,
 		CELLSIZE = 17,    //size of the adjacency matrix rectangle
@@ -194,6 +196,7 @@ var Summit = (function() {
         }
       }
       //console.log(matrix);
+	  /*
       _adjacencyG = d3.select("svg")
 		.append("g")
 		.attr("transform", "translate(30,23)")
@@ -223,6 +226,7 @@ var Summit = (function() {
 			return f;
 		  })
 		  .on("mouseover", gridOver);
+	*/
 	  dbStatus('matrix done');
       
       //var scaleSize = nodes.length * CELLSIZE;
@@ -324,19 +328,22 @@ var Summit = (function() {
 		//d3.select('#classroom-X').selectAll('g')
 		_classMatesG
 			.data(_classRoom)
-			.attr('transform', 
-				function(d, i) {
-					return 'translate(' + (radius * Math.cos(step * i) + offset) + ', ' + (radius * Math.sin(step * i) + offset) + ')';
-				}
-			)
+
 			.attr('x', function(d, i) {
-				d.x = radius * Math.cos(step * i) + offset;
+				//d.x = radius * Math.cos(step * i) + offset;
+				d.x = (Math.random() * WIDTH) + 1;
 				return d.x;
 			})
 			.attr('y', function(d, i) { 
-				d.y = radius * Math.sin(step * i) + offset;
+				//d.y = radius * Math.sin(step * i) + offset;
+				d.y = ( Math.random() * HEIGHT) + 1;
 				return d.y;
-			});
+			})
+			.attr('transform', 
+				function(d, i) {
+					return 'translate(' + d.x + ', ' + d.y + ')';
+				}
+			);
 		//lines
 		//console.log(_relationships);
 		d3.select('#classroom-X').append('g').selectAll('path')

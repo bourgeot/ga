@@ -1,0 +1,21 @@
+Introduction to graph databases
+	What is a graph?
+		Nodes
+			'nouns'
+		Relationships
+			'verbs'
+			endpoints are like subjects and objects
+		Properties
+			'adjectives'
+			'adverbs'
+		Labels
+			'kinds of nodes'
+		Paths
+			'sentences'
+	Graph Databases
+		Model and query the elements of a graph.
+	A brief discussion of sets
+		intersections and unions
+	Graph oriented questions
+		...are hard! (for me at least)
+	Example

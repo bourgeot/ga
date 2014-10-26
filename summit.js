@@ -1,13 +1,12 @@
 var Summit = (function() {
 	var _frame = 0,
 		WIDTH = 950,
-		HEIGHT = 620,
+		HEIGHT = 600,
 		RADIUS = 10,
 		DISPLAY = 640,
 		CELLSIZE = 17,    //size of the adjacency matrix rectangle
-		KNOWPROB = 0.4,  //probability that source KNOWS target
-		LIKEPROB = 0.2,  //probability that source LIKES target
-		RECOMMENDSPROB = 0.1,    //probability that source RECOMMENDS [to] target
+		KNOWPROB = 0.1,  //probability that source KNOWS target
+		LIKEPROB = 0.05,  //probability that source LIKES target
 		_svg,
 		_teacher,
 		_classRoom = [],
@@ -99,7 +98,7 @@ var Summit = (function() {
 				.attr('r', RADIUS);
 				
 		dClassRoomGY = d3.select('svg').append('g')
-			.attr('id', 'classroom-X')
+			.attr('id', 'classroom-Y')
 			.attr('transform', 'translate(9, 33)');				
 		dClassMatesY = dClassRoomGY
 			.selectAll('g')
@@ -128,6 +127,7 @@ var Summit = (function() {
 				.transition().duration(1250)
 				.attr('r', RADIUS);
 		//ship it
+		
 		send(_classRoom,'nodes', dbStatus);
 		//createAdjacencyMatrix(_classRoom,_relationships);
 	}
@@ -254,31 +254,33 @@ var Summit = (function() {
 		_counter = 5;
 		neo4J.query(q, dbStatus, true);
 	}
-	function dbStatus(result) {
+	function next() {
+		nextButton.attributes.setNamedItem(disabled);
 		switch(_counter) {
-			case 0:
-				_counter++;
-				console.log(result);
+			case 1:
 				setupRelationships();
 			break;
-			case 1:
-				_counter++;
-				console.log(result);
+			case 2:
 				createAdjacencyMatrix(_classRoom, _relationships);
 			break;
-			case 2:
-				_counter++;
-				//alert('check neo');
-				//console.log(result);
-				network(result);
-			break;
 			case 3:
-				nextButton.attributes.removeNamedItem('disabled');
-				_counter++;
+				network();
+			break;
+			case 4:
 				//alert(_counter);
 			break;
 			default:
-				console.log(result);
+				console.log(_counter);
+		}
+	}
+	function dbStatus(result) {
+		/*  update the counter
+			enable the next button
+		*/
+		console.log(result);
+		_counter++;
+		if(nextButton.attributes.getNamedItem('disabled') !== null) {
+			nextButton.attributes.removeNamedItem('disabled');
 		}
 	}
 	function send(array, arrayType, callback) {
@@ -312,7 +314,13 @@ var Summit = (function() {
 				}
 			
 			break;
+			case 'query':
+				for(i=0; i < array.length; i++) {
+					q.statements.push(array[i]);
+				}
+			break;
 			default:
+				//send the query as written for beter or worse
 		}
 		neo4J.query(q, callback, true);
 	}
@@ -346,6 +354,8 @@ var Summit = (function() {
 			);
 		//lines
 		//console.log(_relationships);
+
+
 		d3.select('#classroom-X').append('g').selectAll('path')
 			.data(_relationships)
 			.enter()
@@ -360,18 +370,39 @@ var Summit = (function() {
 					return "M" + d.source.x + "," + d.source.y + "A" + dr + "," + dr + " 0 0,1 " + d.target.x + "," + d.target.y;
 			});
 		_classMatesG.selectAll('circle')
-						.attr('r', 0)
 				//.attr('cx', function (d, i) {return (i * RADIUS * 2.3);})
 				//.attr('cy', function (d, i) {return RADIUS;})
 				.style('stroke', 'black')
 				.style('stroke-width', '1px')
 				.style('fill', 'steelblue')
-				.style('fill-opacity', 0.9)
-				.transition().duration(750)
-				.attr('r', RADIUS);
-
-		
+				.style('fill-opacity', 0.3)
+				//.transition().duration(750)
+				.attr('r', RADIUS)
+				.on('click',findFriends);		
 		dbStatus('network done');
+	}
+	function findFriends(d) {
+		//console.log(d);
+		//console.log(i);
+		//console.log(this);
+		var q = [
+			{
+				statement: "MATCH p = (m)-[:KNOWS]->(n)  WHERE m.name='" + d.name + "' RETURN nodes(p)"
+			},
+			{
+				statement: "MATCH p = (m)-[:LIKES]->(n)  WHERE m.name='" + d.name + "' RETURN nodes(p)"
+			}
+		];
+		send(q, 'query', highlightPaths);
+	}
+	function highlightPaths(response) {
+		console.log(response.result.results[0]);
+		//check the contents of the data array
+		var highlights = {
+			knows: response.result.results[0].data[0].row[0],
+			likes: response.result.results[0].data[0].row[0]
+		};
+		console.log(highlights);
 	}
 	//return public methods
 	return {

@@ -1,10 +1,12 @@
 var Summit = (function() {
 	var _frame = 0,
-		WIDTH = 950,
+		WIDTH = 930,
 		HEIGHT = 600,
-		RADIUS = 10,
+		RADIUS = 30,
+		CELL = 10,
+		//RADIUS = 22,
 		DISPLAY = 640,
-		CELLSIZE = 17,    //size of the adjacency matrix rectangle
+		//size of the adjacency matrix rectangle
 		KNOWPROB = 0.1,  //probability that source KNOWS target
 		LIKEPROB = 0.05,  //probability that source LIKES target
 		_svg,
@@ -16,12 +18,16 @@ var Summit = (function() {
 		_students,
 		_counter = 0,
 		_relationships = [];
-	var nextButton = document.getElementById('next-button'),
-		disabled = document.createAttribute('disabled');
-		disabled.value = 'disabled';
+	var startButton = document.getElementById('start-button'),
+		nextButton = document.getElementById('next-button'),
+		nDisabled = document.createAttribute('disabled'),
+		sDisabled = document.createAttribute('disabled');
+		nDisabled.value = 'disabled';
+		sDisabled.value = 'disabled';
 		
 	function setup() {
-		nextButton.attributes.setNamedItem(disabled);
+		startButton.attributes.setNamedItem(sDisabled);
+		nextButton.attributes.setNamedItem(nDisabled);
 		_counter = 0;
 		_teacher = {name:'00', teacher: true, x: 0, y: 0};
 		_classRoom = [
@@ -65,12 +71,14 @@ var Summit = (function() {
 			.enter()
 			.append('g')
 			.attr('id', function(d) { return d.name;})
-			.attr('x', function(d, i) { 
-				d.x = i*RADIUS * 2.3;
+			.attr('x', function(d, i) {
+				var m = i % 8;
+				d.x = m*RADIUS * 4;
 				return d.x;
 			})
-			.attr('y', function(d) { 
-				d.y = RADIUS;
+			.attr('y', function(d, i) { 
+				var m = Math.floor(i/8);
+				d.y = 40 + (m * RADIUS*4);
 				return d.y;
 			})
      		.attr('transform', function(d) { return 'translate(' + d.x + ', ' + d.y + ')';});
@@ -78,14 +86,40 @@ var Summit = (function() {
 			//.attr('transform', function(d, i) { return 'translate(' + i * RADIUS * 2.3 + ', ' + RADIUS + ')';});
 		_classMatesG.append('text')
 				.attr('text-anchor', 'middle')
-				.text(function(d) {return d.name;})
+				.text(function(d) {
+					return d.name;
+				})
 				.attr('font-family', 'sans-serif')
-				.attr('font-size', RADIUS)
-				.attr('y', 0.33 * RADIUS)
+				.attr('font-size', 0.5 * RADIUS)
+				.attr('y', -0.25*RADIUS)
 				.attr('fill', 'none')
-				.transition().duration(1250)
+				.attr('fill-opacity', 0)
+				.transition().delay(700).duration(1250)
 				.attr('fill', 'black')
+				.attr('fill-opacity', 1)
 				.attr('font-weight', 'bold');
+		_classMatesG.append('text')
+				.attr('text-anchor', 'middle')
+				.text(function(d) {
+					var t = '';
+					if(d.student) {
+						t = 'student';
+					}
+					else {
+						t=  'teacher';
+					}
+					return t;
+				})
+				.attr('font-family', 'sans-serif')
+				.attr('font-size', 0.5 * RADIUS)
+				.attr('y', RADIUS*0.5 - (0.25*RADIUS))
+				.attr('fill', 'none')
+				.attr('fill-opacity', 0)
+				.transition().delay(700).duration(1250)
+				.attr('fill', 'black')
+				.attr('fill-opacity', 1)
+				.attr('font-weight', 'bold');
+
 		_classMatesG.append('circle')
 				.attr('r', 0)
 				//.attr('cx', function (d, i) {return (i * RADIUS * 2.3);})
@@ -95,39 +129,7 @@ var Summit = (function() {
 				.style('fill', 'steelblue')
 				.style('fill-opacity', 0.3)
 				.transition().duration(1250)
-				.attr('r', RADIUS);
-				
-		dClassRoomGY = d3.select('svg').append('g')
-			.attr('id', 'classroom-Y')
-			.attr('transform', 'translate(9, 33)');				
-		dClassMatesY = dClassRoomGY
-			.selectAll('g')
-			.data(_classRoom)
-			.enter()
-			.append('g')
-			.attr('transform', function(d, i) { return 'translate(' + RADIUS + ', ' + i * RADIUS * 2.3 + ')';});
-		dClassMatesY.append('text')
-				.attr('text-anchor', 'middle')
-				.text(function(d) {return d.name;})
-				.attr('font-family', 'sans-serif')
-				.attr('font-size', RADIUS)
-				.attr('y', 0.33 * RADIUS)
-				.attr('fill', 'none')
-				.transition().duration(1250)
-				.attr('fill', 'black')
-				.attr('font-weight', 'bold');
-		dClassMatesY.append('circle')
-				.attr('r', 0)
-				//.attr('cx', function (d, i) {return (i * RADIUS * 2.3);})
-				//.attr('cy', function (d, i) {return RADIUS;})
-				.style('stroke', 'black')
-				.style('stroke-width', '1px')
-				.style('fill', 'steelblue')
-				.style('fill-opacity', 0.3)
-				.transition().duration(1250)
-				.attr('r', RADIUS);
-		//ship it
-		
+				.attr('r', RADIUS);	
 		send(_classRoom,'nodes', dbStatus);
 		//createAdjacencyMatrix(_classRoom,_relationships);
 	}
@@ -135,6 +137,14 @@ var Summit = (function() {
 	function setupRelationships() {
 		var i, j, r, m, relProb = [[KNOWPROB, 'KNOWS'], [LIKEPROB, 'LIKES']];
 		//console.log(relProb);
+		//turn down the circles
+		_classMatesG.selectAll('circle')
+			.transition().duration(1250)
+			.attr('r', 0);
+		_classMatesG.selectAll('text')
+			.transition().duration(1250)
+			.attr('fill-opacity', 0);
+		//done turning down
 		for (i = 0; i < _classRoom.length; i++) {
 			for (j = 0; j < _classRoom.length; j++) {
 				if (i == j) {
@@ -163,7 +173,7 @@ var Summit = (function() {
 				}
 			}
 		}
-		console.log(_relationships.length);
+		//console.log(_relationships.length);
 		send(_relationships, 'relationships', dbStatus);
 	}
 	
@@ -196,7 +206,7 @@ var Summit = (function() {
         }
       }
       //console.log(matrix);
-	  /*
+	  
       _adjacencyG = d3.select("svg")
 		.append("g")
 		.attr("transform", "translate(30,23)")
@@ -205,20 +215,20 @@ var Summit = (function() {
 		  .data(matrix)
 		  .enter()
 		  .append("rect")
-		  .attr("width", RADIUS * 2)
-		  .attr("height", RADIUS * 2)
-		  .attr("x", function (d) {return d.x * RADIUS * 2.3;})
-		  .attr("y", function (d) {return d.y * RADIUS * 2.3})
+		  .attr("width", CELL * 2)
+		  .attr("height", CELL * 2)
+		  .attr("x", function (d) {return d.x * CELL * 2.3;})
+		  .attr("y", function (d) {return d.y * CELL * 2.3})
 		  .style("stroke", "black")
 		  .style("stroke-width", "1px")
 		  .style("fill", function (d) {
 			var f;
 			//console.log (d.type);
 			if (d.type == 'KNOWS') {
-				f = 'blue';
+				f = 'red';
 			}
 			else if (d.type == 'LIKES') {
-				f = 'red';
+				f = 'blue';
 			}
 			else {
 				f = 'purple';
@@ -226,16 +236,17 @@ var Summit = (function() {
 			return f;
 		  })
 		  .on("mouseover", gridOver);
-	*/
+	
 	  dbStatus('matrix done');
       
-      //var scaleSize = nodes.length * CELLSIZE;
-      //var nameScale = d3.scale.ordinal().domain(nodes.map(function (el) {return el.name})).rangePoints([0,scaleSize],1);
+      var scaleSize = nodes.length * CELL*2.3;
+      var nameScale = d3.scale.ordinal().domain(nodes.map(function (el) {return el.name})).rangePoints([0,scaleSize],1);
       
-      //xAxis = d3.svg.axis().scale(nameScale).orient("top").tickSize(4);    
-     // yAxis = d3.svg.axis().scale(nameScale).orient("left").tickSize(4);    
-      //d3.select("#adjacencyG").append("g").call(xAxis); //.selectAll("text").transition().style("text-anchor", "end").attr("transform", "translate(-10,-10) rotate(90)");
-      //d3.select("#adjacencyG").append("g").call(yAxis);
+      xAxis = d3.svg.axis().scale(nameScale).orient("top").tickSize(4);    
+     yAxis = d3.svg.axis().scale(nameScale).orient("left").tickSize(4);    
+      d3.select("#adjacencyG").append("g").call(xAxis)
+		.selectAll("text").transition().style("text-anchor", "end").attr("transform", "translate(-10,-10) rotate(90)");
+      d3.select("#adjacencyG").append("g").call(yAxis);
       
       function gridOver(d,i) {
         d3.selectAll("rect").style("stroke-width", function (p) {return p.x == d.x || p.y == d.y ? "3px" : "1px"})
@@ -253,9 +264,12 @@ var Summit = (function() {
 		]};
 		_counter = 5;
 		neo4J.query(q, dbStatus, true);
+		if(startButton.attributes.getNamedItem('disabled') !== null) {
+			startButton.attributes.removeNamedItem('disabled');
+		}
 	}
 	function next() {
-		nextButton.attributes.setNamedItem(disabled);
+		nextButton.attributes.setNamedItem(nDisabled);
 		switch(_counter) {
 			case 1:
 				setupRelationships();
@@ -325,11 +339,18 @@ var Summit = (function() {
 		neo4J.query(q, callback, true);
 	}
 	function network() {
-		var radius = 250,
+		//turn down adjacencyG
+		d3.select('#adjacencyG').remove();
+			//.selectAll('rect')
+			//.transition()
+			//.attr('fill-opacity',0);
+
+		//done turn down
+		/*var radius = 250,
 			offset = 300,
 			theta = 0,
 			i, j, x, y,
-			step = 2 * Math.PI / _classRoom.length;
+			step = 2 * Math.PI / _classRoom.length;*/
 		//d3.select('#adjacencyG').selectAll('rect')
 			//.transition().style('fill-opacity', '0.0').style('stroke-opacity', '0.0');
 		//nodes
@@ -339,12 +360,12 @@ var Summit = (function() {
 
 			.attr('x', function(d, i) {
 				//d.x = radius * Math.cos(step * i) + offset;
-				d.x = (Math.random() * WIDTH) + 1;
+				d.x = (-0.5 * RADIUS + Math.random() * WIDTH) + 1;
 				return d.x;
 			})
 			.attr('y', function(d, i) { 
 				//d.y = radius * Math.sin(step * i) + offset;
-				d.y = ( Math.random() * HEIGHT) + 1;
+				d.y = ( RADIUS + Math.random() * HEIGHT) + 1;
 				return d.y;
 			})
 			.attr('transform', 
@@ -375,10 +396,15 @@ var Summit = (function() {
 				.style('stroke', 'black')
 				.style('stroke-width', '1px')
 				.style('fill', 'steelblue')
-				.style('fill-opacity', 0.3)
-				//.transition().duration(750)
+				.style('fill-opacity', 0)
+				//.on('click',findFriends)
+				.transition().duration(750)
 				.attr('r', RADIUS)
-				.on('click',findFriends);		
+				.style('fill-opacity', 1);	
+		_classMatesG.selectAll('text')
+			.transition().delay(700).duration(1250)
+			.attr('fill-opacity', 1);
+		//done turning down				
 		dbStatus('network done');
 	}
 	function findFriends(d) {

@@ -297,8 +297,8 @@ var Summit = (function() {
 			nextButton.attributes.removeNamedItem('disabled');
 		}
 	}
-	function send(array, arrayType, callback) {
-		//send the array to the database
+	function send(input, arrayType, callback) {
+		//send the input to the database
 	/*
 		query = {statements:[]};
 		var cQ = {statement: 'CREATE (n:Person {nodes}) RETURN n', parameters: {}};
@@ -311,17 +311,17 @@ var Summit = (function() {
 				q.statements.push(
 					{
 						statement: "CREATE (n:Person {nodes}) RETURN n",
-						parameters: {nodes: array}
+						parameters: {nodes: input}
 					}
 				);
 			break;
 			case 'relationships':
-				for(i=0; i<array.length; i++) {
+				for(i=0; i<input.length; i++) {
 					q.statements.push(
 						{
-							statement: "MATCH (m:Person {name: '" + array[i].source.name 
-							+ "'}), (n:Person {name: '" + array[i].target.name 
-							+ "'})  CREATE (m)-[r:" + array[i].type + "]->(n) RETURN m.name, n.name, type(r)"
+							statement: "MATCH (m:Person {name: '" + input[i].source.name 
+							+ "'}), (n:Person {name: '" + input[i].target.name 
+							+ "'})  CREATE (m)-[r:" + input[i].type + "]->(n) RETURN m.name, n.name, type(r)"
 
 						}
 					);
@@ -329,13 +329,21 @@ var Summit = (function() {
 			
 			break;
 			case 'query':
-				for(i=0; i < array.length; i++) {
-					q.statements.push(array[i]);
+				for(i=0; i < input.length; i++) {
+					q.statements.push(input[i]);
+				}
+			break;
+			case 'statements':
+				//input should be of type object. If so, send it otherwise send it unprocessed to the callback.
+				if(typeof input == 'object') {
+					q = input;
 				}
 			break;
 			default:
-				//send the query as written for beter or worse
+				//send the input to the callback without processing it.
+				(callback(input));
 		}
+		//console.log(JSON.stringify(q));
 		neo4J.query(q, callback, true);
 	}
 	function network() {
@@ -430,11 +438,24 @@ var Summit = (function() {
 		};
 		console.log(highlights);
 	}
+	function executeStatements() {
+	
+		var inputText= document.getElementById('statements').value;
+		//console.log(inputText);
+		var input = JSON.parse(inputText);
+		//console.log(input);
+		//send is looking for an object
+		send(input, 'statements', showResults);
+	}
+	function showResults(data) {
+		document.getElementById('results').innerHTML = '<p>' + JSON.stringify(data) + '</p>';
+	}
 	//return public methods
 	return {
 		start: function() {return setup();}, 
 		reset: function() {return reset();},
-		next: function() {return next(); }
+		next: function() {return next(); },
+		execute: function() {return executeStatements(); }
 	};
 }) ();
 

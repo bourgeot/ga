@@ -448,7 +448,8 @@ var Summit = (function() {
 		send(input, 'statements', showResults);
 	}
 	function showResults(data) {
-		document.getElementById('results').innerHTML = '<p>' + JSON.stringify(data) + '</p>';
+		//data = {result: {commit: '<url>',  results:[],  transaction:{},  errors:[]}}
+		document.getElementById('results').innerHTML = '<p>' + JSON.stringify(data.result) + '</p>';
 	}
 	//return public methods
 	return {
